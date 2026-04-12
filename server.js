@@ -2,6 +2,7 @@ const express = require("express");
 const colors = require("colors");
 const morgan = require("morgan");
 const dotenv = require("dotenv");
+const cors = require("cors");
 const connecDB = require("./config/db");
 const path = require("path");
 
@@ -9,6 +10,20 @@ dotenv.config();
 connecDB();
 
 const app = express();
+
+// CORS Configuration
+const allowedOrigins = [
+  "https://production-care-connect.onrender.com",
+  "http://localhost:3000",
+  "http://localhost:8080",
+];
+
+app.use(
+  cors({
+    origin: allowedOrigins,
+    credentials: true,
+  }),
+);
 
 app.use(express.json());
 app.use(express.urlencoded({ extended: true }));
