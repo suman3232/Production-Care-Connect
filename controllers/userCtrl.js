@@ -269,7 +269,7 @@ const getAllDoctorController = async (req, res) => {
         success: false,
         error,
         message: "Error While Fetching Doctors",
-      }));
+      });
   }
 };
 
