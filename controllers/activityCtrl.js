@@ -84,7 +84,6 @@ const assignHealthPlanController = async (req, res) => {
       data: healthPlan,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error assigning health plan",
@@ -109,7 +108,6 @@ const getPatientHealthPlansController = async (req, res) => {
       data: plans,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error retrieving health plans",
@@ -241,7 +239,6 @@ const getPatientHealthLogsController = async (req, res) => {
       data: logs,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error retrieving health logs",
@@ -445,7 +442,6 @@ const getDoctorPatientPlansController = async (req, res) => {
       data: plansWithLogs,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error retrieving patient health plans",
@@ -479,7 +475,6 @@ const updateHealthPlanStatusController = async (req, res) => {
       data: plan,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error updating health plan status",

@@ -12,7 +12,6 @@ const getAllUsersController = async (req, res) => {
       data: users,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error while fetching users",
@@ -31,7 +30,6 @@ const getAllDoctorsController = async (req, res) => {
       data: doctors,
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error while getting doctors data",
@@ -132,7 +130,6 @@ const getDashboardStatsController = async (req, res) => {
       },
     });
   } catch (error) {
-    console.log(error);
     res.status(500).send({
       success: false,
       message: "Error fetching dashboard stats",

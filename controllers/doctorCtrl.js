@@ -20,7 +20,6 @@ const getDoctorInfoController = async (req, res) => {
       data: doctor,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).send({
       success: false,
       error: error.message,
@@ -84,16 +83,12 @@ const doctorAppointmentController = async (req, res) => {
         message: "Doctor profile not found",
       });
     }
-    console.log("Fetching appointments for doctor:", doctor._id);
 
     const appointments = await appointmentModel
       .find({
         doctorId: doctor._id,
       })
       .populate("userId", "name email phone");
-
-    console.log("Appointments found:", appointments.length);
-    console.log("Appointments data:", appointments);
 
     res.status(200).send({
       success: true,
@@ -137,7 +132,6 @@ const updateAvailabilityController = async (req, res) => {
       data: doctor,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).send({
       success: false,
       message: "Error updating availability",
@@ -179,7 +173,6 @@ const getConsultationController = async (req, res) => {
       data: consultation,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).send({
       success: false,
       message: "Error fetching consultation",
@@ -428,7 +421,6 @@ const getAppointmentController = async (req, res) => {
       data: appointment,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).send({
       success: false,
       message: "Error fetching appointment",

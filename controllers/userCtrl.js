@@ -64,9 +64,6 @@ const registerController = async (req, res) => {
     });
     await newuser.save();
 
-    // Log the saved user for debugging
-    console.log("New user saved:", newuser);
-
     // Respond with success
     res.status(201).send({ message: "Register successfully", success: true });
   } catch (error) {
@@ -143,7 +140,6 @@ const authController = async (req, res) => {
       data: user,
     });
   } catch (error) {
-    console.error(error);
     return res.status(500).send({
       message: "auth error",
       success: false,
@@ -154,16 +150,12 @@ const authController = async (req, res) => {
 
 const applyDoctorController = async (req, res) => {
   try {
-    // Ensure doctor model instance creation is correct
-    console.log("Apply doctor request body:", req.body);
     const newDoctor = new doctorModel({ ...req.body, status: "pending" });
     const savedDoctor = await newDoctor.save();
-    console.log("Doctor saved successfully:", savedDoctor._id);
 
     // Find the admin user and check if they exist
     const adminUser = await userModel.findOne({ isAdmin: true });
     if (!adminUser) {
-      console.log("No admin user found");
       return res.status(404).send({
         success: false,
         message: "Admin user not found",
@@ -188,7 +180,6 @@ const applyDoctorController = async (req, res) => {
     const updatedAdmin = await userModel.findByIdAndUpdate(adminUser._id, {
       notification: adminUser.notification,
     });
-    console.log("Admin notifications updated");
 
     // Send success response
     res.status(201).send({
@@ -196,10 +187,6 @@ const applyDoctorController = async (req, res) => {
       message: "Doctor Applied Successfully",
     });
   } catch (error) {
-    // Improved error handling
-    console.error("Error while applying for doctor:", error);
-    console.error("Error message:", error.message);
-    console.error("Error details:", error.errors);
     res.status(500).send({
       success: false,
       error: error.message,
@@ -261,7 +248,6 @@ const deleteallnotificationController = async (req, res) => {
       data: updatedUser,
     });
   } catch (error) {
-    console.error(error);
     res.status(500).send({
       success: false,
       message: "Unable to delete all notifications",
@@ -279,8 +265,7 @@ const getAllDoctorController = async (req, res) => {
       data: doctors,
     });
   } catch (error) {
-    (console.log(error),
-      res.status(500).send({
+    res.status(500).send({
         success: false,
         error,
         message: "Error While Fetching Doctors",
@@ -422,7 +407,7 @@ const initiateBookingController = async (req, res) => {
       pendingBookingId: pendingBooking._id,
     });
   } catch (error) {
-    console.log(error);
+
     res.status(500).send({
       success: false,
       error,
