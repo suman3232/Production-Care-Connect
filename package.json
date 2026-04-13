@@ -14,6 +14,9 @@
   "author": "suman patra",
   "license": "ISC",
   "description": "",
+  "engines": {
+    "node": ">=18"
+  },
   "dependencies": {
     "antd": "^5.20.6",
     "bcryptjs": "^2.4.3",

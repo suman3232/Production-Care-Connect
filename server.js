@@ -12,15 +12,29 @@ connecDB();
 const app = express();
 
 // CORS Configuration
-const allowedOrigins = [
-  "https://production-care-connect.onrender.com",
+// Set CORS_ORIGINS on your host as a comma-separated list, e.g.:
+// CORS_ORIGINS=https://your-app.onrender.com,http://localhost:3000
+const defaultAllowedOrigins = [
   "http://localhost:3000",
   "http://localhost:8080",
 ];
 
+const envAllowedOrigins = (process.env.CORS_ORIGINS || "")
+  .split(",")
+  .map((s) => s.trim())
+  .filter(Boolean);
+
+const allowedOrigins = Array.from(
+  new Set([...envAllowedOrigins, ...defaultAllowedOrigins]),
+);
+
 app.use(
   cors({
-    origin: allowedOrigins,
+    origin: (origin, callback) => {
+      // Allow non-browser requests (no Origin header)
+      if (!origin) return callback(null, true);
+      return callback(null, allowedOrigins.includes(origin));
+    },
     credentials: true,
   }),
 );
