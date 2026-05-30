@@ -542,7 +542,7 @@ const verifyRazorpayPaymentController = async (req, res) => {
     // Create the appointment
     const appointmentDateTime = moment(
       `${pendingBooking.date} ${pendingBooking.time}`,
-      "YYYY-MM-DD HH:mm",
+      "DD-MM-YYYY HH:mm",
     ).toDate();
 
     const newAppointment = new appointmentModel({

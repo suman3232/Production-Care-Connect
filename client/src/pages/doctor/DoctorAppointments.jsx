@@ -2,7 +2,7 @@ import React, { useState, useEffect } from "react";
 import axios from "axios";
 import moment from "moment";
 import { useNavigate } from "react-router-dom";
-import { Table, message, Button, Card, Space, Tag, Spin, Empty } from "antd";
+import { Table, message, Button, Card, Space, Tag, Spin, Empty, Modal, Form, Input } from "antd";
 import Layout from "../../components/Layout";
 import {
   CalendarOutlined,
@@ -16,6 +16,9 @@ const DoctorAppointments = () => {
   const navigate = useNavigate();
   const [appointments, setAppointments] = useState([]);
   const [loading, setLoading] = useState(false);
+  const [isModalVisible, setIsModalVisible] = useState(false);
+  const [selectedAppointment, setSelectedAppointment] = useState(null);
+  const [form] = Form.useForm();
 
   const getAppointments = async () => {
     try {
@@ -53,29 +56,27 @@ const DoctorAppointments = () => {
     getAppointments();
   }, []);
 
-  const handleStatus = async (record, status) => {
+  const handleStatus = async (record, status, meetingLink = undefined) => {
     try {
       console.log("Updating appointment status:", {
         appointmentId: record._id,
         status,
+        meetingLink,
       });
 
-      const res = await axios.post(
-        "/api/v1/doctor/update-status",
-        { appointmentId: record._id, status },
-        {
-          headers: {
-            Authorization: `Bearer ${localStorage.getItem("token")}`,
-          },
+      const payload = { appointmentId: record._id, status };
+      if (typeof meetingLink !== "undefined") payload.meetingLink = meetingLink;
+
+      const res = await axios.post("/api/v1/doctor/update-status", payload, {
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      );
+      });
 
       console.log("Status update response:", res.data);
 
       if (res.data.success) {
-        message.success(
-          res.data.message || `Appointment ${status} successfully`,
-        );
+        message.success(res.data.message || `Appointment ${status} successfully`);
         getAppointments();
       } else {
         message.error(res.data.message || "Failed to update status");
@@ -86,6 +87,35 @@ const DoctorAppointments = () => {
       console.error("Error details:", error.response?.data);
       message.error(error.response?.data?.message || "Something Went Wrong");
     }
+  };
+
+  const onApproveClick = (record) => {
+    // If online appointment, prompt for meeting link
+    if (record.consultationType === "online") {
+      setSelectedAppointment(record);
+      setIsModalVisible(true);
+      form.setFieldsValue({ meetingLink: record.meetingLink || "" });
+    } else {
+      handleStatus(record, "approved");
+    }
+  };
+
+  const handleModalCancel = () => {
+    setIsModalVisible(false);
+    setSelectedAppointment(null);
+    form.resetFields();
+  };
+
+  const handleModalFinish = async (values) => {
+    if (!selectedAppointment) return;
+    await handleStatus(selectedAppointment, "approved", values.meetingLink);
+    handleModalCancel();
+  };
+
+  const onEditMeetingLink = (record) => {
+    setSelectedAppointment(record);
+    setIsModalVisible(true);
+    form.setFieldsValue({ meetingLink: record.meetingLink || "" });
   };
 
   const handleViewConsultation = (appointmentId) => {
@@ -171,6 +201,16 @@ const DoctorAppointments = () => {
           id: record._id,
           status: record.status,
         });
+
+        const appointmentTime = new Date(record.appointmentDateTime || `${record.date} ${record.time}`);
+        const minutesDiff = (appointmentTime - new Date()) / (1000 * 60);
+        const canJoinCall =
+          record.consultationType === "online" &&
+          record.status?.toLowerCase() === "approved" &&
+          record.meetingLink &&
+          minutesDiff >= -10 &&
+          minutesDiff <= 10;
+
         return (
           <Space size="small">
             {(record.status === "pending" || record.status === "confirmed") && (
@@ -185,7 +225,7 @@ const DoctorAppointments = () => {
                     borderRadius: "4px",
                     height: "32px",
                   }}
-                  onClick={() => handleStatus(record, "approved")}
+                  onClick={() => onApproveClick(record)}
                 >
                   Approve
                 </Button>
@@ -208,14 +248,30 @@ const DoctorAppointments = () => {
             )}
             {record.status?.toLowerCase() === "approved" && (
               <>
-                {record.consultationType === "online" && record.meetingLink && (
-                  <Button
-                    type="primary"
-                    size="small"
-                    onClick={() => window.open(record.meetingLink, "_blank")}
-                  >
-                    Join Call
-                  </Button>
+                {record.consultationType === "online" && (
+                  <>
+                    <Button
+                      type="primary"
+                      size="small"
+                      onClick={() => onEditMeetingLink(record)}
+                    >
+                      {record.meetingLink ? "Edit Meeting Link" : "Add Meeting Link"}
+                    </Button>
+                    {record.meetingLink && canJoinCall && (
+                      <Button
+                        type="primary"
+                        size="small"
+                        onClick={() => window.open(record.meetingLink, "_blank")}
+                      >
+                        Join Call
+                      </Button>
+                    )}
+                    {!record.meetingLink && (
+                      <span style={{ color: "#6b7280", fontSize: "14px" }}>
+                        Meeting link not set
+                      </span>
+                    )}
+                  </>
                 )}
                 {record.consultationType === "offline" && (
                   <span style={{ color: "#6b7280", fontSize: "14px" }}>
@@ -266,6 +322,38 @@ const DoctorAppointments = () => {
             Manage your daily appointments
           </p>
         </div>
+
+        {/* Meeting link modal for approving online appointments */}
+        <Modal
+          title="Add Meeting Link"
+          open={isModalVisible}
+          onCancel={handleModalCancel}
+          footer={null}
+        >
+          <Form form={form} layout="vertical" onFinish={handleModalFinish}>
+            <Form.Item
+              name="meetingLink"
+              label="Google Meet Link"
+              rules={[
+                { required: true, message: "Please enter the meeting link" },
+                {
+                  type: "url",
+                  message: "Please enter a valid URL (include https://)",
+                },
+              ]}
+            >
+              <Input placeholder="https://meet.google.com/xxx-xxxx-xxx" />
+            </Form.Item>
+            <Form.Item>
+              <div style={{ display: "flex", justifyContent: "flex-end", gap: 8 }}>
+                <Button onClick={handleModalCancel}>Cancel</Button>
+                <Button type="primary" onClick={() => form.submit()}>
+                  Save & Approve
+                </Button>
+              </div>
+            </Form.Item>
+          </Form>
+        </Modal>
 
         {/* Appointments Table Card */}
         <Card

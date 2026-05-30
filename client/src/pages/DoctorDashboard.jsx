@@ -47,7 +47,14 @@ const DoctorDashboard = () => {
       title: "Date",
       dataIndex: "date",
       key: "date",
-      render: (date) => moment(date).format("DD MMM, YYYY"),
+      render: (date, record) => {
+        const appointmentDate = record.appointmentDateTime
+          ? moment(record.appointmentDateTime)
+          : moment(date, "DD-MM-YYYY");
+        return appointmentDate.isValid()
+          ? appointmentDate.format("DD MMM, YYYY")
+          : date;
+      },
     },
     {
       title: "Time",

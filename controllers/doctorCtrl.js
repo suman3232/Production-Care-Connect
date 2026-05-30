@@ -354,10 +354,17 @@ const getAvailableSlotsController = async (req, res) => {
 
 const updateStatusController = async (req, res) => {
   try {
-    const { appointmentId, status } = req.body;
+    const { appointmentId, status, meetingLink } = req.body;
+
+    // Build update payload (only include meetingLink when provided)
+    const updatePayload = { status };
+    if (typeof meetingLink !== "undefined") {
+      updatePayload.meetingLink = meetingLink;
+    }
+
     const appointment = await appointmentModel.findByIdAndUpdate(
       appointmentId,
-      { status },
+      updatePayload,
       { new: true },
     );
 
@@ -370,11 +377,22 @@ const updateStatusController = async (req, res) => {
 
     const user = await userModel.findById(appointment.userId);
     if (user) {
+      // Push a generic status update notification
       user.notification.push({
         type: "Status-Updated",
         message: `Your appointment status has been updated to ${status}`,
         onClickPath: "/doctor-appointments",
       });
+
+      // If a meeting link was provided, add a separate notification with the link
+      if (meetingLink) {
+        user.notification.push({
+          type: "meeting-link",
+          message: `Your doctor added a meeting link: ${meetingLink}`,
+          onClickPath: "/doctor-appointments",
+        });
+      }
+
       await user.save();
     }
 
